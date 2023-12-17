@@ -1,0 +1,202 @@
+{{ template "header" .}}
+<script>
+    $(document).on('click', '.enable-btn', function() {
+        var taskID = $(this).data('id');
+        $.post("/geo-edit/" + geoID, function(response) {
+            alert(response.message);
+        });
+    });
+    $(document).on('click', '.delete-btn', function() {
+        var taskID = $(this).data('id');
+        $.post("/geo-delete/" + geoID, function(response) {
+            alert(response.message);
+        });
+    });
+</script>
+    <div class="container mt-5">
+        <h2>Geo List</h2>          
+        <button class="btn btn-primary mb-3" data-toggle="modal" data-target="#geoModal" data-id="0">Create New Geo</button>
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>GeoName/Code</th>
+                    <th>Code</th>
+                    <th>Prefix</th>
+                    <th>Src</th>
+                    <th>Provider</th>
+                    <th>Lines</th>
+                    <th>CPS</th>
+                    <th>Comment</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{ range .geos }}
+                <tr>
+                    <td>{{ .ID }}</td>
+                    <td>{{ .Geo }} / {{ .Geo2 }}</td>
+                    <td>{{ .Code }}</td>
+                    <td>{{ .Prefix }}</td>
+                    <td>{{ .Src }}</td>
+                    <td>{{ .Provider }}</td>
+                    <td>{{ .NLines }}</td>
+                    <td>{{ .CPS }}</td>
+                    <td>{{ if .Comment.Valid }}{{ .Comment.String }}{{ end }}</td>
+                    <td>
+                        <!-- Пример кнопок действий -->
+                        <button class="btn btn-warning btn-sm btn-edit" data-id="{{ .ID }}">Edit</button>
+<!--                        <button class="btn btn-success btn-sm enable-btn" data-id="{{ .ID }}">Enable</button>
+                        <button class="btn btn-danger btn-sm delete-btn" data-id="{{ .ID }}">Disable</button>-->
+                    </td>
+                </tr>
+                {{ end }}
+            </tbody>
+        </table>
+            <!-- Модальное окно для редактирования/создания geo -->
+            <div class="modal fade" id="geoModal" tabindex="-1" aria-labelledby="geoModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="geoModalLabel">Edit Geo</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="geoForm" autocomplete="off">
+                                <div class="form-group">
+                                    <label for="geoname">Geoname</label>
+                                    <input type="text" class="form-control" id="geoname" name="geoname">
+                                </div>
+                                <div class="form-group">
+                                    <label for="geoname2">Geoname short</label>
+                                    <input type="text" class="form-control" id="geoname2" name="geoname2" maxlength="2">
+                                </div>
+                                <div class="form-group">
+                                    <label for="geocode">Geo code<small class="text-muted">Оставьте пустым, если не нужен</small></label>
+                                    <input type="text" class="form-control" id="geocode" name="geocode">
+                                </div>
+                                <div class="form-group">
+                                    <label for="geoprovider">Название провайдера<small class="text-muted">Для отчетов</small></label>
+                                    <input type="text" class="form-control" id="geoprovider" name="geoprovider">
+                                </div>
+                                <div class="form-group">
+                                    <label for="geoprefix">Geo prefix<small class="text-muted">Оставьте пустым, если не нужен</small></label>
+                                    <input type="text" class="form-control" id="geoprefix" name="geoprefix">
+                                </div>
+                                <div class="form-group">
+                                    <label for="geosrc">Номера для звонков<small class="text-muted">список через запятую или 000000</small></label>
+                                    <input type="text" class="form-control" id="geosrc" name="geosrc">
+                                </div>
+                                <div class="form-group">
+                                    <label for="geonlines">Количество линий</label>
+                                    <input type="text" class="form-control" id="geonlines" name="geonlines">
+                                </div>
+                                <div class="form-group">
+                                    <label for="geocps">Количество соединений в секунду</label>
+                                    <input type="text" class="form-control" id="geocps" name="geocps">
+                                </div>
+                                <div class="form-group">
+                                    <label for="geocomment">Комментарий</label>
+                                    <input type="text" class="form-control" id="geocomment" name="geocomment">
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" id="saveUserBtn">Save changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+    </div>
+{{ template "footer" .}}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentGeoId = "0";
+    
+    // Экземпляр модального окна Bootstrap
+    const geoModal = new bootstrap.Modal(document.getElementById('geoModal'));
+
+    // При клике на кнопку редактирования или создания нового пользователя
+    document.querySelectorAll('.btn-edit, [data-target="#geoModal"]').forEach(button => {
+        button.addEventListener('click', function() {
+            currentGeoId = button.getAttribute('data-id');
+            
+            if (currentGeoId !== "0") {
+                // Если geo существует, загрузите данные
+                fetch("/geo/" + currentGeoId)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('geoname').value = data.Geo;
+                        document.getElementById('geoname2').value = data.Geo2;
+                        document.getElementById('geoprovider').value = data.Provider;
+                        document.getElementById('geocode').value = data.Code;
+                        document.getElementById('geoprefix').value = data.Prefix;
+                        document.getElementById('geosrc').value = data.Src;
+                        document.getElementById('geonlines').value = data.NLines;
+                        document.getElementById('geocps').value = data.CPS;
+                        if(data.Comment && data.Comment.Valid) {
+                            document.getElementById('geocomment').value = data.Comment.String;
+                        } else {
+                            document.getElementById('geocomment').value = "";
+                        }
+                    });
+            } else {
+                // Очистите форму для создания нового пользователя
+                document.getElementById('geoname').value = "";
+                document.getElementById('geoname2').value = "";
+                document.getElementById('geoprovider').value = "";
+                document.getElementById('geocode').value = "";
+                document.getElementById('geoprefix').value = "";
+                document.getElementById('geosrc').value = "000000";
+                document.getElementById('geonlines').value = "60";
+                document.getElementById('geocps').value = "10";
+            }
+
+            // Показываем модальное окно
+            geoModal.show();
+        });
+    });
+
+    // Обработчик для кнопки "Close" в модальном окне
+    document.querySelector('.modal-footer .btn-secondary').addEventListener('click', function() {
+        geoModal.hide();
+    });
+
+    // Обработчик для кнопки закрыть (крестик) в модальном окне
+    document.querySelector('.modal-header .close').addEventListener('click', function() {
+        geoModal.hide();
+    });
+
+    // При клике на кнопку "Save changes" в модальном окне
+    document.getElementById('saveUserBtn').addEventListener('click', function() {
+        const form = document.getElementById('geoForm');
+        const formData = new FormData(form);
+
+        if (!form.geoname.value) {
+            alert("Please fill in all required fields.");
+            return;
+        }
+
+        // Отправьте форму на сервер
+        fetch("/geo-edit/" + currentGeoId, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            location.reload(); // Перезагрузите страницу для отображения обновленных данных
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+    });
+});
+
+</script>

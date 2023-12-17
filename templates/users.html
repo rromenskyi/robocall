@@ -1,0 +1,250 @@
+{{ template "header" .}}
+    <div class="container mt-5">
+        <h2>Users List</h2>
+                <!-- Кнопка для открытия модального окна создания нового пользователя -->
+        <button class="btn btn-primary mb-3" data-toggle="modal" data-target="#userModal" data-id="0">Create New User</button>
+            <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>AccessLevel</th>
+                    <th>Comment</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+{{ range .users }}
+<tr>
+    <td>{{ .ID }}</td>
+    <td>{{ .UserName }}</td>
+    <td>{{ .AccessLevel }}</td>
+        {{ if .Comment.Valid }}
+    <td>{{ .Comment.String }}</td>
+{{ else }}
+    <td>N/A</td>
+{{ end }}
+    <td>
+        <!-- Пример кнопок действий -->
+        <button class="btn btn-info btn-sm btn-edit" data-id="{{ .ID }}">Edit</button>
+    </td>
+</tr>
+{{ end }}
+            </tbody>
+        </table>
+            <!-- Модальное окно для редактирования/создания пользователя -->
+            <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="userModalLabel">Edit User</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="userForm" autocomplete="off">
+                                <div class="form-group">
+                                    <label for="username">Username</label>
+                                    <input type="text" class="form-control" id="username" name="username">
+                                </div>
+                                <div class="form-group">
+                                    <label for="username">Password</label>
+                                    <input type="text" class="form-control" id="password" name="password" autocomplete="new-password">
+                                </div>
+                                <div class="form-group">
+                                    <label for="username">AccessLevel</label>
+                                    <input type="text" class="form-control" id="accesslevel" name="accesslevel">
+                                </div>
+                                <div class="form-group">
+                                    <label for="username">Access</label>
+                                    <input type="text" class="form-control" id="access" name="access">
+                                </div>
+                                <div class="form-group">
+                                    <label for="username">Comment</label>
+                                    <input type="text" class="form-control" id="comment" name="comment">
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" id="saveUserBtn">Save changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+
+{{ template "footer" .}}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentUserId = "0";
+    
+    // Экземпляр модального окна Bootstrap
+    const userModal = new bootstrap.Modal(document.getElementById('userModal'));
+
+    // При клике на кнопку редактирования или создания нового пользователя
+    document.querySelectorAll('.btn-edit, [data-target="#userModal"]').forEach(button => {
+        button.addEventListener('click', function() {
+            currentUserId = button.getAttribute('data-id');
+            
+            if (currentUserId !== "0") {
+                // Если пользователь существует, загрузите данные
+                fetch("/user/" + currentUserId)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('username').value = data.username;
+                        document.getElementById('password').value = data.password;
+                        document.getElementById('accesslevel').value = data.accesslevel;
+                        document.getElementById('access').value = data.access;
+                        if(data.comment && data.comment.Valid) {
+                            document.getElementById('comment').value = data.comment.String;
+                        } else {
+                            document.getElementById('comment').value = "";
+                        }
+                    });
+            } else {
+                // Очистите форму для создания нового пользователя
+                document.getElementById('username').value = "";
+                document.getElementById('password').value = "";
+                document.getElementById('accesslevel').value = "100";
+                document.getElementById('access').value = "";
+                document.getElementById('comment').value = "";
+            }
+
+            // Показываем модальное окно
+            userModal.show();
+        });
+    });
+
+    // Обработчик для кнопки "Close" в модальном окне
+    document.querySelector('.modal-footer .btn-secondary').addEventListener('click', function() {
+        userModal.hide();
+    });
+
+    // Обработчик для кнопки закрыть (крестик) в модальном окне
+    document.querySelector('.modal-header .close').addEventListener('click', function() {
+        userModal.hide();
+    });
+
+    // При клике на кнопку "Save changes" в модальном окне
+    document.getElementById('saveUserBtn').addEventListener('click', function() {
+        const form = document.getElementById('userForm');
+        const formData = new FormData(form);
+
+        if (!form.username.value) {
+            alert("Please fill in all required fields.");
+            return;
+        }
+
+        // Отправьте форму на сервер
+        fetch("/user-edit/" + currentUserId, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            location.reload(); // Перезагрузите страницу для отображения обновленных данных
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+    });
+});
+
+</script>
+<!--
+
+<script>
+
+let currentUserId = "0";
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Экземпляр модального окна Bootstrap
+    var userModal = new bootstrap.Modal(document.getElementById('userModal'));
+
+    // Когда открывается модальное окно
+    $(".btn-edit, [data-target='#userModal']").click(function() {
+        currentUserId = $(this).data('id');
+    });
+
+    // При клике на кнопку редактирования или создания нового пользователя
+    document.querySelectorAll('.btn-edit, [data-target="#userModal"]').forEach(button => {
+        button.addEventListener('click', function() {
+//            let userId = button.getAttribute('data-id');
+            let userId = currentUserId;
+            
+            // Если пользователь существует (не создание нового пользователя), загрузите данные
+            if (userId !== "0") {
+                fetch("/user/" + userId)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('username').value = data.username;
+                        document.getElementById('password').value = data.password;
+                        document.getElementById('accesslevel').value = data.accesslevel;
+                        document.getElementById('access').value = data.access;
+                        document.getElementById('comment').value = data.comment.String;
+
+                        // Заполните остальные поля формы данными пользователя
+                    });
+            } else {
+                // Очистите форму для создания нового пользователя
+                document.getElementById('username').value = "";
+                        document.getElementById('password').value = "";
+                        document.getElementById('accesslevel').value = "100";
+                        document.getElementById('access').value = "";
+                        document.getElementById('comment').value = "";
+                // Очистите остальные поля формы
+            }
+
+            // Показываем модальное окно
+            userModal.show();
+        });
+    });
+
+    //При клике на кнопку "Close" в модальном окне
+    document.querySelector('.modal-footer .btn-secondary').addEventListener('click', function() {
+        userModal.hide();  // Закрываем модальное окно
+    });
+
+    document.querySelector('.modal-header .close').addEventListener('click', function() {
+    // Ваш код здесь, если вам нужна дополнительная логика
+        userModal.hide();  // Закрыть модальное окно
+    });
+
+    // При клике на кнопку "Save changes" в модальном окне
+    document.getElementById('saveUserBtn').addEventListener('click', function() {
+        let form = document.getElementById('userForm');
+        let formData = new FormData(form);
+
+
+        if (!form.username.value) {
+            alert("Please fill in all required fields.");
+            return;
+        }
+
+
+        // Отправьте форму на сервер
+//        let userId = document.querySelector('[data-target="#userModal"]').getAttribute('data-id');
+//        currentUserId = $(this).data('id');
+        let userId = currentUserId;
+        fetch("/user-edit/" + userId, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            location.reload(); // Перезагрузите страницу для отображения обновленных данных
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+    });
+});
+</script>-->

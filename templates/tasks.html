@@ -1,0 +1,59 @@
+{{ template "header" .}}
+<script>
+    $(document).on('click', '.enable-btn', function() {
+        var taskID = $(this).data('id');
+        $.post("/task-edit/" + taskID, function(response) {
+            alert(response.message);
+        });
+    });
+    $(document).on('click', '.delete-btn', function() {
+        var taskID = $(this).data('id');
+        $.post("/task-delete/" + taskID, function(response) {
+            alert(response.message);
+        });
+    });
+    setTimeout(function() {
+        location.reload();
+    }, 5000); // 5000 миллисекунд = 5 секунд
+</script>
+    <div class="container mt-5">
+        <h2>Task List</h2>
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Phone Number</th>
+                    <th>Lines</th>
+                    <th>CPS</th>
+                    <th>IVR</th>
+                    <th>Retries</th>
+                    <th>Retry Time</th>
+                    <th>Dial Time</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{ range .tasks }}
+                <tr>
+                    <td>{{ .ID }}</td>
+                    <td>{{ shorten .PhoneNumber 100 }}</td>
+                    <td>{{ .NLines }}</td>
+                    <td>{{ .CPS }}</td>
+                    <td>{{ .IVR }}</td>
+                    <td>{{ .Retries }}</td>
+                    <td>{{ .Retry_time }}</td>
+                    <td>{{ .Dial_time }}</td>
+                    <td>
+                        <!-- Пример кнопок действий -->
+        {{ if eq .Ready 0 }}
+
+                        <button class="btn btn-success btn-sm enable-btn" data-id="{{ .ID }}">Enable</button>
+                        <button class="btn btn-danger btn-sm delete-btn" data-id="{{ .ID }}">Delete</button>
+        {{ end }}
+                    </td>
+                </tr>
+                {{ end }}
+            </tbody>
+        </table>
+    </div>
+{{ template "footer" .}}

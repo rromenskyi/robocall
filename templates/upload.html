@@ -1,0 +1,203 @@
+{{ template "header" .}}
+<!--
+    <div class="container mt-5">
+        <h2>Upload File</h2>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file">Drag and drop or choose a file:</label>
+                <input type="file" class="form-control-file border" id="file" name="file">
+            </div>
+            <div class="form-group">
+                <label for="parameter1">Maxlines:</label>
+                <input type="number" class="form-control" id="parameter1" name="parameter1" value="30">
+            </div>
+            <div class="form-group">
+                <label for="parameter2">CPS:</label>
+                <input type="number" class="form-control" id="parameter2" name="parameter2" value="10">
+            </div>
+            <div class="form-group">
+            <label for="geo">Geo:</label>
+                <select name="geo" id="geo" class="form-control">
+                {{ range .geos }}
+                <option value="{{ .ID }}">{{ .Geo2 }}/{{ .Geo }}/{{ .Provider }}/{{ if .Comment.Valid }}{{ .Comment.String }}{{ end }}</option>
+                {{ end }}
+                </select>
+            </div>
+            <div class="form-group">
+            <label for="ivr">Choose an IVR:</label>
+                <select name="ivr" id="ivr" class="form-control">
+                {{ range .ivrNames }}
+                <option value="{{ . }}">{{ . }}</option>
+                {{ end }}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="parameter3">Retries:</label>
+                <input type="number" class="form-control" id="parameter3" name="parameter3" value="3">
+            </div>
+            <div class="form-group">
+                <label for="parameter4">Retry_time:</label>
+                <input type="number" class="form-control" id="parameter4" name="parameter4" value="1800">
+            </div>
+            <div class="form-group">
+                <label for="parameter5">Call_time:</label>
+                <input type="number" class="form-control" id="parameter5" name="parameter5" value="60">
+            </div>
+
+            <div class="form-group">
+                <label for="startdatetimeDate">Start Date:</label>
+                <input type="date" class="form-control" id="startdatetimeDate" name="startdatetimeDate">
+            </div>
+            <div class="form-group">
+                <label for="startdatetimeTime">Start Time:</label>
+                <input type="time" class="form-control" id="startdatetimeTime" name="startdatetimeTime">
+            </div>
+            <div class="form-group">
+                <label for="stopdatetimeDate">Stop Date:</label>
+                <input type="date" class="form-control" id="stopdatetimeDate" name="stopdatetimeDate">
+            </div>
+            <div class="form-group">
+                <label for="stopdatetimeTime">Stop Time:</label>
+                <input type="time" class="form-control" id="stopdatetimeTime" name="stopdatetimeTime">
+            </div>
+
+   
+
+            <button type="submit" class="btn btn-primary">Upload</button>
+        </form>
+    </div>
+-->
+<div class="container mt-5">
+    <h2>Добавить задание</h2>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        
+        <div class="card mb-4">
+            <div class="card-header">Настройки</div>
+            <div class="card-body">
+               <div class="form-group">
+                    <label for="file"><h5>Перетащите файл или выберите его:</h5></label>
+                    <input type="file" class="form-control-file border" id="file" name="file" accept=".csv">
+                    <small class="text-muted">Принимаются только файлы формата .csv</small>
+                </div>
+                <div class="row">
+                    <h5 class="text-center mb-4">Соединение</h5>
+
+                    <div class="col-md-6 border-right">
+                        <div class="form-group">
+                            <label for="parameter1">Максимум линий:</label>
+                            <input type="number" class="form-control" id="parameter1" name="parameter1" value="30">
+                        </div>
+                        <div class="form-group">
+                            <label for="parameter2">Прирост звонков в секунду (не более):</label>
+                            <input type="number" class="form-control" id="parameter2" name="parameter2" value="10">
+                        </div>
+                        <div class="form-group">
+                        <label for="geo">Настройки гео:</label>
+                            <select name="geo" id="geo" class="form-control">
+                            {{ range .geos }}
+                            <option value="{{ .ID }}">{{ .Geo2 }}/{{ .Geo }}/{{ .Provider }}/{{ if .Comment.Valid }}{{ .Comment.String }}{{ end }}</option>
+                            {{ end }}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                        <label for="ivr">Автоинформатор:</label>
+                            <select name="ivr" id="ivr" class="form-control">
+                            {{ range .ivrNames }}
+                            <option value="{{ . }}">{{ . }}</option>
+                            {{ end }}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                        <label for="type">Тип:</label>
+                            <select name="type" id="type" class="form-control">
+                            <option value="1">Автоинформатор (проигрывание звука)</option>
+                            <option value="2">Звонок в колцентр</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="parameter3">Количество попыток дозвона:</label>
+                            <input type="number" class="form-control" id="parameter3" name="parameter3" value="3">
+                        </div>
+                        <div class="form-group">
+                            <label for="parameter4">Пауза между дозвонами, в случае неудачи (секунд):</label>
+                            <input type="number" class="form-control" id="parameter4" name="parameter4" value="1800">
+                        </div>
+                        <div class="form-group">
+                            <label for="parameter5">Время набора абонента (секунд):</label>
+                            <input type="number" class="form-control" id="parameter5" name="parameter5" value="60">
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">Время прозвона
+            <small class="text-muted">(Используется часовой пояс сервера)</small></div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Start Date & Time -->
+                    <div class="col-md-6 border-right">
+                        <h5 class="text-center mb-4">Начало</h5>
+                        <div class="form-group">
+                            <label for="daytimestart">Время:</label>
+                            <input type="time" class="form-control" id="daytimestart" name="daytimestart" value="09:00">
+                        </div>
+                    </div>
+
+                    <!-- Stop Date & Time -->
+                    <div class="col-md-6">
+                        <h5 class="text-center mb-4">Конец</h5>
+                        <div class="form-group">
+                            <label for="daytimestop">Время:</label>
+                            <input type="time" class="form-control" id="daytimestop" name="daytimestop" value="19:00">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        
+        <div class="card mb-4">
+            <div class="card-header">Начальная и конечная дата активности автоинформатора
+            <small class="text-muted">(Используется часовой пояс сервера)</small></div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Start Date & Time -->
+                    <div class="col-md-6 border-right">
+                        <h5 class="text-center mb-4">Начало</h5>
+                        <div class="form-group">
+                            <label for="startdatetimeDate">Дата:</label>
+                            <input type="date" class="form-control" id="startdatetimeDate" name="startdatetimeDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="startdatetimeTime">Время:</label>
+                            <input type="time" class="form-control" id="startdatetimeTime" name="startdatetimeTime" value="00:00">
+                        </div>
+                    </div>
+
+                    <!-- Stop Date & Time -->
+                    <div class="col-md-6">
+                        <h5 class="text-center mb-4">Конец</h5>
+                        <div class="form-group">
+                            <label for="stopdatetimeDate">Дата:</label>
+                            <input type="date" class="form-control" id="stopdatetimeDate" name="stopdatetimeDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="stopdatetimeTime">Время:</label>
+                            <input type="time" class="form-control" id="stopdatetimeTime" name="stopdatetimeTime" value="00:00">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-lg btn-primary">Начали!</button>
+    </form>
+</div>
+
+{{ template "footer" .}}

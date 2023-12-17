@@ -1,0 +1,17 @@
+/* Sample CSS */
+body {
+    font-family: Arial, sans-serif;
+}
+
+.footer- {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 60px; /* Высота футера */
+    line-height: 60px; /* Центрирует текст вертикально */
+}
+
+.no-wrap {
+    white-space: nowrap;
+}
+

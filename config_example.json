@@ -1,0 +1,31 @@
+{
+  "global": {
+    "maxcalls": "600",
+    "maxcps": "100",
+    "queuecps": "2",
+    "httpport": ":8080",
+    "httpsport": ":443",
+    "ssl_privatekey": "ssl/privkey.pem",
+    "ssl_fullchain": "ssl/fullchain.pem",
+    "allowedips": "127.0.0.1,18.159.139.55"
+  },
+  "database": {
+    "user": "asteriskcdrdb",
+    "password": "queiJahGoadahzo3rahl",
+    "host": "127.0.0.1",
+    "port": "3306",
+    "name": "asteriskcdrdb"
+  },
+  "ami": {
+    "user": "r220dev",
+    "password": "1NfYnc3SEAcZRwZLKCyzQFnhVhZmg2Wf",
+    "host": "127.0.0.1:5038",
+    "enabled": "0"
+  },
+  "oami": {
+    "user": "dialer",
+    "password": "lai6ieJ8eebiQu4fuo2zaed3Quaht7",
+    "host": "127.0.0.1:5036",
+    "enabled": "0"
+  }
+}

@@ -1,0 +1,212 @@
+{{ template "header" .}}
+<script>
+    $(document).on('click', '.btn-stat', function() {
+        var taskID = $(this).data('id');
+        $.post("/branches-stat/" + taskID, function(response) {
+            alert(response.message);
+        });
+    }); 
+</script>
+    <div class="container mt-5">
+        <h2>Branches List</h2>
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Branch</th>
+                    <th>Working Time</th>
+                    <th>Start/Stop date</th>
+                    <th>Rows OK</th>
+                    <th>Rows total/done</th>
+                    <th>Limits</th>
+                    <th>Calls</th>
+                    <th>Comment</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+{{ range .branches }}
+<tr>
+    <td>{{ .ID }}</td>
+    <td>{{ .BranchName }}</td>
+    <td>{{ .TODStart }}/{{ .TODStop }}</td>
+    <td><div class="no-wrap">{{ .StartTime }}/</div><div class="no-wrap">{{ .StopTime }}</div></td>
+    <td>{{ .RowsOK }}</td>
+    <td>{{ .RowsTotal }}/{{ .RowsProcessed }}</td>
+    <td>{{ .NLines }}/{{ .CPS }}</td>
+    <td>{{  $counts := countForUID .BranchName $.callEntry }}D:{{ index $counts "state1" }}|C:{{ index $counts "state1" }}</td>
+        {{ if .Comment.Valid }}
+    <td>{{ .Comment.String }}</td>
+{{ else }}
+    <td>N/A</td>
+{{ end }}
+    <td>
+        <!-- Пример кнопок действий -->
+<!--        <button class="btn btn-primary btn-sm btn-report" data-id="{{ .ID }}">Report</button>-->
+        <a href="/branches-csv" target="_blank" class="btn btn-primary btn-sm">Report</a>
+        <button class="btn btn-info btn-sm btn-stat" data-id="{{ .ID }}">Stat</button>
+        <button class="btn btn-warning btn-sm edit-button" data-branch-id="{{ .ID }}" nlines="{{ .NLines }}" cps="{{ .CPS }}">Edit</button>
+        <button class="btn btn-danger btn-sm btn-archive" data-branch-id="{{ .ID }}">Archive</button>
+    </td>
+</tr>
+{{ end }}
+            </tbody>
+        </table>
+    </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    let autoUpdate = true;
+
+    // Слайдеры
+    const slider1 = document.getElementById("slider1");
+    const slider2 = document.getElementById("slider2");
+    const output1 = document.getElementById("slider1Value");
+    const output2 = document.getElementById("slider2Value");
+
+    // Устанавливаем начальные значения слайдеров и их меток
+    slider1.oninput = function() {
+        output1.innerHTML = this.value;
+        slider2.value = Math.min(Math.round(this.value / 5), 50);  // связанный слайдер
+        output2.innerHTML = slider2.value;
+    }
+
+    slider2.oninput = function() {
+        output2.innerHTML = this.value;
+    }
+
+    // Функция обновления страницы
+    function startAutoUpdate() {
+        setTimeout(function() {
+            if (autoUpdate) {
+                location.reload();
+            }
+        }, 10000);
+    }
+
+    // Сразу же запускаем функцию автообновления
+    startAutoUpdate();
+
+    // Обработчик для кнопок "Edit"
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('edit-button')) {
+            e.target.classList.add("active");  // Помечаем текущую активную кнопку
+            autoUpdate = false;  // Отключаем автообновление
+
+            const nlinesValue = e.target.getAttribute("nlines");
+            const cpsValue = e.target.getAttribute("cps");
+
+            slider1.value = nlinesValue;
+            slider2.value = cpsValue;
+
+            output1.innerHTML = nlinesValue;
+            output2.innerHTML = cpsValue;
+
+            $('#sliderModal').modal('show');
+        }
+    });
+
+    // Обработка нажатия на кнопку "Save" в модальном окне
+    document.getElementById("saveBtn").addEventListener("click", function() {
+        const branchID = document.querySelector(".edit-button.active").getAttribute("data-branch-id");
+
+        const postData = {
+            nlines: parseInt(slider1.value,10),
+            cps: parseInt(slider2.value,10),
+        };
+
+        fetch(`/branches-edit/${branchID}`, {
+            method: 'POST',
+            body: JSON.stringify(postData),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json()).then(data => {
+            if (data.status === 'success') {
+                alert('Data saved successfully!');
+            } else {
+                alert('Error saving data: ' + data.message);
+            }
+        });
+
+        document.querySelector(".edit-button.active").classList.remove("active");  // Снимаем пометку активности с кнопки "Edit"
+        $('#sliderModal').modal('hide');
+        autoUpdate = true;  // Включаем автообновление обратно после сохранения
+        startAutoUpdate();  // и запускаем таймер снова
+    });
+
+    // Если вы хотите отключить автообновление при закрытии модального окна:
+    $('#sliderModal').on('hide.bs.modal', function() {
+        autoUpdate = true;
+        startAutoUpdate();
+    });
+
+    // Обработка нажатия на кнопку "Close" в модальном окне
+    document.querySelector("#sliderModal .btn-secondary").addEventListener("click", function() {
+        // Если вам нужны дополнительные действия при нажатии на эту кнопку, добавьте их здесь
+        $('#sliderModal').modal('hide');
+        autoUpdate = true;  // Включаем автообновление обратно после сохранения
+        startAutoUpdate();  // и запускаем таймер снова
+    });
+
+    // Обработка нажатия на крестик в верхнем углу модального окна
+    document.querySelector("#sliderModal .close").addEventListener("click", function() {
+        // Если вам нужны дополнительные действия при нажатии на эту кнопку, добавьте их здесь
+        $('#sliderModal').modal('hide');
+        autoUpdate = true;  // Включаем автообновление обратно после сохранения
+        startAutoUpdate();  // и запускаем таймер снова
+    });
+
+
+});
+
+
+</script>
+
+<style>
+/* Стили для модального окна */
+.modal-content {
+    width: 600px;  /* Ширина модального окна */
+}
+
+/* Стили для слайдеров */
+input[type="range"] {
+    width: 100%;  /* Занимает всю доступную ширину */
+    margin: 20px 0;  /* Отступы сверху и снизу */
+    display: block;  /* Переносит следующий элемент на новую строку */
+}
+
+/* Стили для меток слайдеров */
+label {
+    font-size: 18px;  /* Размер шрифта метки */
+    display: block;  /* Переносит следующий элемент на новую строку */
+    margin: 10px 0;  /* Отступы сверху и снизу */
+}
+</style>
+
+<!-- Модальное окно со слайдерами -->
+<div id="sliderModal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Редактирование значений</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <label>Lines: <span id="slider1Value">0</span></label>
+                <input type="range" id="slider1" min="0" max="150" step="1" value="0">
+                
+                <label>CPS (автоматически 1:5 от Lines): <span id="slider2Value">0</span></label>
+                <input type="range" id="slider2" min="0" max="50" step="1" value="0">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="saveBtn">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{{ template "footer" .}}

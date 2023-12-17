@@ -1,0 +1,83 @@
+{{ template "header" .}}
+    <div class="container mt-5">
+    	<form method="post" enctype="multipart/form-data">
+    	<div class="card mb-4">
+            <div class="card-header">Задайте даты для генерации отчета
+            <div class="card-body">
+                <div class="row">
+                    <!-- Start Date & Time -->
+                    <div class="col-md-6 border-right">
+                        <h5 class="text-center mb-4">Начало</h5>
+                        <div class="form-group">
+                            <label for="startdatetimeDate">Дата:</label>
+                            <input type="date" class="form-control" id="startdatetimeDate" name="startdatetimeDate">
+                        </div>
+                    </div>
+
+                    <!-- Stop Date & Time -->
+                    <div class="col-md-6">
+                        <h5 class="text-center mb-4">Конец</h5>
+                        <div class="form-group">
+                            <label for="stopdatetimeDate">Дата:</label>
+                            <input type="date" class="form-control" id="stopdatetimeDate" name="stopdatetimeDate">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>        
+        <button type="submit" class="btn btn-lg btn-primary">Начали!</button>
+    </form>
+<table class="table mt-5" id="reportTable">
+    <thead>
+        <tr>
+            <th>Type</th>
+            <th>Country</th>
+            <th>Provider</th>
+            <th>Total Minutes</th>
+            <th>Answered Calls</th>
+            <th>Total Calls</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Здесь будут отображаться данные -->
+    </tbody>
+</table>
+    </div>
+{{ template "footer" .}}
+
+<script>
+document.querySelector("form").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const formData = {
+        startdatetimeDate: document.getElementById("startdatetimeDate").value,
+        stopdatetimeDate: document.getElementById("stopdatetimeDate").value,
+    };
+
+    fetch("/get-report-data", {
+        method: "POST",
+        body: JSON.stringify(formData),
+        headers: {
+            "Content-Type": "application/json"
+        }
+    }).then(response => response.json())
+    .then(data => {
+        const tableBody = document.querySelector("#reportTable tbody");
+        tableBody.innerHTML = ""; // Очистить текущие строки
+        
+        data.forEach(row => {
+            const tr = document.createElement("tr");
+            ["type", "country", "provider", "total_min", "answered_calls", "total_calls"].forEach(column => {
+                const td = document.createElement("td");
+                td.textContent = row[column];
+                tr.appendChild(td);
+            });
+            tableBody.appendChild(tr);
+        });
+    }).catch(error => {
+        console.error("Error fetching report data:", error);
+    });
+});
+
+</script>
