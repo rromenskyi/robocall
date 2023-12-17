@@ -17,7 +17,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Set Dockerfile path
         run: echo "DOCKERFILE_PATH=/Dockerfile" >> $GITHUB_ENV
