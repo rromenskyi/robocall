@@ -1,3 +1,14 @@
-app/go.mod
-app/go.sum
+.DS_Store
+
+# Local configuration and secrets
+config.json
+
+# Build outputs
+bin/
+dist/
+robocall
 app/autodialer
+
+# Go
+coverage.out
+*.test

@@ -1,19 +1,29 @@
-FROM golang:1.21-bookworm as builder
+FROM golang:1.26-bookworm AS builder
+
+WORKDIR /src
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY app ./app
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/robocall ./app
+
+FROM debian:bookworm-slim
 
 WORKDIR /app
 
-COPY go.* ./
-RUN go mod robocall
-
-COPY . ./
-
-RUN go build -v -o server
-
-FROM debian:bookworm-slim
-RUN set -x && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    ca-certificates && \
+RUN set -eux; \
+    apt-get update; \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      ca-certificates \
+      tzdata; \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /app/server /app/server
+COPY --from=builder /out/robocall /app/robocall
+COPY templates /app/templates
+COPY static /app/static
+COPY app/config_sample.json /app/config_sample.json
 
-CMD ["/app/server"]
+EXPOSE 8080 443
+
+CMD ["/app/robocall"]

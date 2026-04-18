@@ -10,21 +10,21 @@
     "allowedips": "127.0.0.1,18.159.139.55"
   },
   "database": {
-    "user": "asteriskcdrdb",
-    "password": "queiJahGoadahzo3rahl",
+    "user": "dialer_user",
+    "password": "change-me",
     "host": "127.0.0.1",
     "port": "3306",
     "name": "asteriskcdrdb"
   },
   "ami": {
     "user": "amiuser",
-    "password": "amipass",
+    "password": "change-me",
     "host": "127.0.0.1:5038",
     "enabled": "0"
   },
   "oami": {
     "user": "oami",
-    "password": "oamipass",
+    "password": "change-me",
     "host": "127.0.0.1:5036",
     "enabled": "0"
   }

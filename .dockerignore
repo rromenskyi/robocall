@@ -1,0 +1,7 @@
+.git
+.github
+.DS_Store
+bin
+dist
+config.json
+app/autodialer
