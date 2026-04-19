@@ -49,7 +49,7 @@ func main() {
 		log.Println("OAMI disabled")
 	}
 
-	r := setupRouter()
+	r := setupRouter(config.Global)
 	if err := serveHTTP(config.Global, r); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}
@@ -153,14 +153,16 @@ func getTasks() ([]Task, error) {
 }
 
 func AuthRequired(c *gin.Context) {
-
-	//    allowedIPs := strings.Split(config.Global.AllowedIP, ",")
-
 	clientIP := c.ClientIP()
+
+	if len(allowedIPs) == 0 {
+		c.Next()
+		return
+	}
 
 	isAllowedIP := false
 	for _, allowedIP := range allowedIPs {
-		if clientIP == allowedIP {
+		if allowedIP == "*" || clientIP == allowedIP {
 			isAllowedIP = true
 			break
 		}
@@ -181,7 +183,7 @@ func AuthRequired(c *gin.Context) {
 	}
 }
 
-func setupRouter() *gin.Engine {
+func setupRouter(config GlobalConfig) *gin.Engine {
 	r := gin.Default()
 	r.SetFuncMap(template.FuncMap{
 		"shorten":     shorten,
@@ -190,6 +192,13 @@ func setupRouter() *gin.Engine {
 	r.LoadHTMLGlob("templates/*")
 	r.Static("/static", "./static")
 	store := cookie.NewStore([]byte(getSessionSecret()))
+	store.Options(sessions.Options{
+		Path:     "/",
+		MaxAge:   60 * 60 * 24 * 30,
+		HttpOnly: true,
+		Secure:   strings.TrimSpace(config.HttpsPort) != "",
+		SameSite: http.SameSiteLaxMode,
+	})
 	r.Use(sessions.Sessions("mysession", store))
 
 	r.NoRoute(func(c *gin.Context) {

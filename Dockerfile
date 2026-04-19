@@ -16,6 +16,7 @@ RUN set -eux; \
     apt-get update; \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
       ca-certificates \
+      curl \
       tzdata; \
     rm -rf /var/lib/apt/lists/*
 
@@ -28,5 +29,8 @@ COPY app/config_sample.json /app/config_sample.json
 RUN chmod 755 /app/robocall /app/docker-entrypoint.sh
 
 EXPOSE 8080 443
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD curl -fsS http://127.0.0.1:8080/ping || exit 1
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]

@@ -115,6 +115,43 @@ The container now exits early with a clear error if `/app/config.json` is not
 mounted. `app/config_sample.json` is bundled only as a reference file inside the
 image; the application still expects a real runtime config at `/app/config.json`.
 
+For a local all-in-one stack with MariaDB and preloaded schema:
+
+```bash
+docker compose up --build
+```
+
+That stack uses [`compose.yml`](compose.yml), a runtime config at [`compose/config.json`](compose/config.json), and an init schema at [`compose/initdb/01-schema.sql`](compose/initdb/01-schema.sql). It brings up:
+
+- `db`: MariaDB with the dialer and CDR tables
+- `robocall`: the web app on `http://127.0.0.1:8080`
+
+Local compose defaults:
+
+- database: `asteriskcdrdb`
+- database user: `dialer_user`
+- database password: `dialer_pass`
+- web login: `admin`
+- web password: `admin`
+
+`compose/config.json` intentionally sets `allowedips` to `*` for local development. Keep a real allowlist in production configs.
+
+The app also exposes `GET /ping`, which is used for the container health check in both `Dockerfile` and `compose.yml`.
+
+## Published Images
+
+GitHub Actions now publishes container images to:
+
+- `ghcr.io/rromenskyi/robocall`
+- `${DOCKER_USERNAME}/robocall` on Docker Hub when `DOCKER_USERNAME` and `DOCKER_PASSWORD` secrets are configured
+
+Published tags include:
+
+- `latest` on the default branch
+- branch tags such as `main`
+- git tags such as `v1.2.3`
+- immutable commit tags such as `sha-<commit>`
+
 ## Asterisk Setup Notes
 
 The repository contains legacy helper scripts under [`install/`](install) for
