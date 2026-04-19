@@ -60,8 +60,8 @@ func QueueDelete(targetMap map[string]QueueSummary, key string) {
 	mutex.Unlock()
 }
 
-// NewAsterisk initializes the AMI socket with a login and capturing the events.
-func NewAsterisk(ctx context.Context, host string, username string, secret string) (*Asterisk, error) {
+// NewAsterisk initializes an AMI socket with the requested event mask.
+func NewAsterisk(ctx context.Context, host string, username string, secret string, eventMask string) (*Asterisk, error) {
 	_ = ctx
 
 	socket, err := ami.NewSocket(host)
@@ -75,8 +75,7 @@ func NewAsterisk(ctx context.Context, host string, username string, secret strin
 	if err != nil {
 		return nil, err
 	}
-	const events = "system,call,all,user"
-	ok, err := ami.Login(socket, username, secret, events, uuid)
+	ok, err := ami.Login(socket, username, secret, eventMask, uuid)
 	if err != nil {
 		return nil, err
 	}
@@ -194,6 +193,46 @@ func (as *Asterisk) Originate(ctx context.Context, data ami.OriginateData) (AMIR
 	return ami.Originate(as.socket, as.uuid, data)
 }
 
+func isTransientQueueSummaryError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	message := strings.TrimSpace(strings.ToLower(err.Error()))
+	return message == "" || strings.Contains(message, "broken pipe")
+}
+
+func queueSummaryWithRetry(config *AMIConfig, asterisk *Asterisk) (*Asterisk, []AMIResponse, error) {
+	current := asterisk
+	var lastErr error
+
+	for attempt := 0; attempt < 2; attempt++ {
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		summary, err := current.QueueSummary(ctx)
+		cancel()
+		if err == nil {
+			return current, summary, nil
+		}
+
+		lastErr = err
+		if !isTransientQueueSummaryError(err) || attempt == 1 {
+			return current, nil, err
+		}
+
+		if config != nil && strings.Contains(strings.ToLower(err.Error()), "broken pipe") {
+			reconnected, reconnectErr := NewAsterisk(context.Background(), config.Host, config.User, config.Password, "off")
+			if reconnectErr != nil {
+				return current, nil, reconnectErr
+			}
+			current = reconnected
+		}
+
+		time.Sleep(200 * time.Millisecond)
+	}
+
+	return current, nil, lastErr
+}
+
 func (as *Asterisk) run(ctx context.Context) {
 	defer as.wg.Done()
 	for {
@@ -220,9 +259,10 @@ func MonitorAsteriskQueue(asterisk *Asterisk) {
 	for {
 		select {
 		case <-ticker.C:
-			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-			summary, err := asterisk.QueueSummary(ctx)
-			cancel() // Не забудьте завершить контекст после его использования
+			var summary []AMIResponse
+			var err error
+
+			asterisk, summary, err = queueSummaryWithRetry(nil, asterisk)
 			if err != nil {
 				log.Println("Error getting Queue Summary:", err)
 			} else {
@@ -241,7 +281,7 @@ func initAMI(config AMIConfig) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	asterisk, err := NewAsterisk(ctx, config.Host, config.User, config.Password)
+	asterisk, err := NewAsterisk(ctx, config.Host, config.User, config.Password, "off")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -254,22 +294,10 @@ func initAMI(config AMIConfig) {
 	for {
 		select {
 		case <-ticker.C:
-			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-			summary, err := asterisk.QueueSummary(ctx)
-			cancel() // Не забудьте завершить контекст после его использования
+			summaryClient, summary, err := queueSummaryWithRetry(&config, asterisk)
+			asterisk = summaryClient
 			if err != nil {
 				log.Println("Error getting Queue Summary:", err)
-				//not working properly
-				if strings.Contains(err.Error(), "broken pipe") {
-					asterisk, err = NewAsterisk(ctx, config.Host, config.User, config.Password)
-					if err != nil {
-						log.Fatal(err)
-					}
-					summary, err = asterisk.QueueSummary(ctx)
-					if err != nil {
-						log.Println("Error getting Queue Summary after reconnect:", err)
-					}
-				}
 			}
 			if summary != nil {
 				for _, s := range summary {
@@ -357,14 +385,14 @@ func initOAMI(config AMIConfig) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	asterisk, err := NewAsterisk(ctx, config.Host, config.User, config.Password)
+	asterisk, err := NewAsterisk(ctx, config.Host, config.User, config.Password, "off")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer asterisk.Logoff(ctx)
 	log.Printf("connected with asterisk\n")
 
-	eventAsterisk, err := NewAsterisk(ctx, config.Host, config.User, config.Password)
+	eventAsterisk, err := NewAsterisk(ctx, config.Host, config.User, config.Password, "system,call,all,user")
 	if err != nil {
 		log.Fatal(err)
 	}

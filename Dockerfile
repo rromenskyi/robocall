@@ -11,6 +11,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /out/robocall ./app
 FROM debian:bookworm-slim
 
 WORKDIR /app
+ENV GIN_MODE=release
 
 RUN set -eux; \
     apt-get update; \

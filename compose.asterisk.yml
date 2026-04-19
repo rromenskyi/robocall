@@ -1,0 +1,58 @@
+services:
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: asteriskcdrdb
+      MARIADB_USER: dialer_user
+      MARIADB_PASSWORD: dialer_pass
+      MARIADB_ROOT_PASSWORD: rootpass
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -u root -p$$MARIADB_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    volumes:
+      - mariadb-data:/var/lib/mysql
+      - ./compose/initdb:/docker-entrypoint-initdb.d:ro
+
+  asterisk:
+    build:
+      context: ./compose/asterisk
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "asterisk -rx 'core show uptime seconds' >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    ports:
+      - "5038:5038"
+
+  robocall:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      asterisk:
+        condition: service_healthy
+    environment:
+      ROBOCALL_SESSION_SECRET: compose-dev-secret
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/ping || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./compose/asterisk/config.json:/app/config.json:ro
+
+volumes:
+  mariadb-data:

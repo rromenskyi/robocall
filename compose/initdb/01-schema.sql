@@ -168,3 +168,25 @@ ON DUPLICATE KEY UPDATE
   `accesslevel` = VALUES(`accesslevel`),
   `access` = VALUES(`access`),
   `comment` = VALUES(`comment`);
+
+INSERT INTO `geos` (`id`, `geo`, `geo2`, `code`, `prefix`, `src`, `provider`, `nlines`, `cps`, `comment`)
+VALUES
+  (1, 'Local Demo', 'LD', '1', '', '1000', 'compose-dev', 10, 2, 'seeded local compose geo')
+ON DUPLICATE KEY UPDATE
+  `geo` = VALUES(`geo`),
+  `geo2` = VALUES(`geo2`),
+  `code` = VALUES(`code`),
+  `prefix` = VALUES(`prefix`),
+  `src` = VALUES(`src`),
+  `provider` = VALUES(`provider`),
+  `nlines` = VALUES(`nlines`),
+  `cps` = VALUES(`cps`),
+  `comment` = VALUES(`comment`);
+
+INSERT INTO `tasks_ivr` (`id`, `name`, `queue_name`, `type`)
+VALUES
+  (1, 'demo-ivr', 'demo-queue', 1)
+ON DUPLICATE KEY UPDATE
+  `name` = VALUES(`name`),
+  `queue_name` = VALUES(`queue_name`),
+  `type` = VALUES(`type`);

@@ -185,6 +185,9 @@ func AuthRequired(c *gin.Context) {
 
 func setupRouter(config GlobalConfig) *gin.Engine {
 	r := gin.Default()
+	if err := r.SetTrustedProxies(nil); err != nil {
+		log.Printf("Failed to configure trusted proxies: %v", err)
+	}
 	r.SetFuncMap(template.FuncMap{
 		"shorten":     shorten,
 		"countForUID": countForUID,

@@ -138,6 +138,22 @@ Local compose defaults:
 
 The app also exposes `GET /ping`, which is used for the container health check in both `Dockerfile` and `compose.yml`.
 
+For a fuller local dev stack with MariaDB and a minimal Asterisk/AMI side:
+
+```bash
+docker compose -f compose.asterisk.yml up --build
+```
+
+That variant adds:
+
+- `asterisk`: a local Asterisk container with AMI enabled on `5038`
+- `robocall`: wired to `asterisk:5038` for both `ami` and `oami`
+- a seeded IVR name `demo-ivr` and seeded geo `Local Demo`
+
+The full dev stack serves the UI on `http://127.0.0.1:8081` to avoid colliding with the simpler `compose.yml` stack on `:8080`.
+
+The bundled Asterisk profile is intentionally minimal: it is good for local AMI/OAMI bring-up and dialer flow testing, but it is not a production telephony layout.
+
 ## Published Images
 
 GitHub Actions now publishes container images to:
