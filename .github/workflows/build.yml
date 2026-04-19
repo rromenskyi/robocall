@@ -25,7 +25,23 @@ jobs:
           context: .
           file: ./Dockerfile
           push: false
+          load: true
           tags: robocall:ci
+
+      - name: Smoke test image startup contract
+        run: |
+          set +e
+          output="$(docker run --rm robocall:ci 2>&1)"
+          status=$?
+          set -e
+
+          if [ "$status" -eq 0 ]; then
+            echo "container unexpectedly started without config"
+            exit 1
+          fi
+
+          echo "$output"
+          echo "$output" | grep -F "Missing /app/config.json."
 
       - name: Login to Docker Hub
         if: ${{ env.DOCKER_USERNAME != '' && env.DOCKER_PASSWORD != '' }}

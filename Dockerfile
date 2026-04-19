@@ -20,10 +20,13 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /out/robocall /app/robocall
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 COPY templates /app/templates
 COPY static /app/static
 COPY app/config_sample.json /app/config_sample.json
 
+RUN chmod 755 /app/robocall /app/docker-entrypoint.sh
+
 EXPOSE 8080 443
 
-CMD ["/app/robocall"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]

@@ -111,6 +111,10 @@ docker run --rm -p 8080:8080 \
   robocall
 ```
 
+The container now exits early with a clear error if `/app/config.json` is not
+mounted. `app/config_sample.json` is bundled only as a reference file inside the
+image; the application still expects a real runtime config at `/app/config.json`.
+
 ## Asterisk Setup Notes
 
 The repository contains legacy helper scripts under [`install/`](install) for
